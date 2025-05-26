@@ -32,6 +32,18 @@ func main() {
 
 	buildID := args[0]
 
+	logClient := client.NewLogProxyClient("http://localhost:8080")
+	logURL := fmt.Sprintf("logs/%s", buildID)
+
+	if headRequest {
+		contentLength, err := logClient.HeadLog(logURL)
+		if err != nil {
+			log.Fatalf("Error getting Content-Length for build %s: %v", buildID, err)
+		}
+		fmt.Printf("Content-Length for build %s: %d bytes\n", buildID, contentLength)
+		return
+	}
+
 	offset := -1
 	limit := -1
 	outputFile := ""
@@ -64,7 +76,7 @@ func main() {
 		}
 	}
 
-	logClient := client.NewLogProxyClient("http://localhost:8080")
+	//logClient = client.NewLogProxyClient("http://localhost:8080")
 
 	queryParams := url.Values{}
 	if offset != -1 {
@@ -74,7 +86,7 @@ func main() {
 		queryParams.Set("limit", strconv.Itoa(limit))
 	}
 
-	logURL := fmt.Sprintf("logs/%s", buildID)
+	//logURL := fmt.Sprintf("logs/%s", buildID)
 	if len(queryParams) > 0 {
 		logURL = fmt.Sprintf("%s?%s", logURL, queryParams.Encode())
 	}

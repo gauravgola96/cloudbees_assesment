@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -44,22 +45,28 @@ func (lpc *LogProxyClient) DownloadLog(logURL string) ([]byte, error) {
 	return data, nil
 }
 
-func (lpc *LogProxyClient) HeadLog(logURL string) ([]byte, error) {
+func (lpc *LogProxyClient) HeadLog(logURL string) (int64, error) {
 	resp, err := lpc.client.Head(fmt.Sprintf("%s/%s", lpc.url, logURL))
 	if err != nil {
-		return nil, fmt.Errorf("[Log Proxy Client] log request failed: %w", err)
+		return 0, fmt.Errorf("[Log Proxy Client] log request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("[Log Proxy Client] status received : %s", resp.Status)
+		return 0, fmt.Errorf("[Log Proxy Client] status received : %s", resp.Status)
 	}
 
-	data, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("[Log Proxy Client] failed to read response: %w", err)
+	contentLengthStr := resp.Header.Get("Content-Length")
+	if contentLengthStr == "" {
+		return 0, fmt.Errorf("Content-Length header not found in response for %s", logURL)
 	}
-	return data, nil
+
+	contentLength, err := strconv.ParseInt(contentLengthStr, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("failed to parse Content-Length '%s': %w", contentLengthStr, err)
+	}
+
+	return contentLength, nil
 }
 
 func (lpc *LogProxyClient) DeDupLogs(logs []byte) (string, error) {

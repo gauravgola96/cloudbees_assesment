@@ -66,7 +66,7 @@ func (lps *LogProxyServer) HandleGetLog(w http.ResponseWriter, r *http.Request) 
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				subLogger.Error().Err(err).Msg("buildId not found")
-				http.Error(w, fmt.Sprintf("BuildID=%s logs not present on jenkins server : %s", buildID), http.StatusNotFound)
+				http.Error(w, fmt.Sprintf("BuildID=%s logs not present on jenkins server", buildID), http.StatusNotFound)
 				return
 			}
 			subLogger.Error().Err(err).Msg("Error in fetching logs from jenkins server")
@@ -151,7 +151,7 @@ func (lps *LogProxyServer) HandleHeadLog(w http.ResponseWriter, r *http.Request)
 		if err != nil {
 			if strings.Contains(err.Error(), "404") {
 				subLogger.Error().Err(err).Msg("buildId not found")
-				http.Error(w, fmt.Sprintf("BuildID=%s logs not present on jenkins server : %s", buildID), http.StatusNotFound)
+				http.Error(w, fmt.Sprintf("BuildID=%s logs not present on jenkins server ", buildID), http.StatusNotFound)
 				return
 			}
 			subLogger.Error().Err(err).Msg("Error in fetching logs from jenkins server")
