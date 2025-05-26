@@ -14,6 +14,7 @@ type DiskCache struct {
 }
 
 func NewDiskCache(directory string) (*DiskCache, error) {
+	_ = os.RemoveAll(directory)
 	err := os.Mkdir(directory, 0755)
 	if err != nil {
 		return nil, fmt.Errorf("error creating cache directory %s : %w", directory, err)

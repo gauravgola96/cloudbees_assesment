@@ -34,15 +34,15 @@ func LogProxyRoutes() *chi.Mux {
 }
 
 func (lps *LogProxyServer) HandleGetLog(w http.ResponseWriter, r *http.Request) {
-	buildID := r.URL.Query().Get("build_id")
+	buildID := chi.URLParam(r, "build_id")
 	if buildID == "" {
 		http.Error(w, "Build ID cannot be empty string", http.StatusBadRequest)
 		return
 	}
 	subLogger := log.With().Str("module", "server.handler.HandleGetLog").Str("build_id", buildID).Logger()
 
-	offSetParam := r.URL.Query().Get("offset")
-	limitParam := r.URL.Query().Get("limit")
+	offSetParam := chi.URLParam(r, "offset")
+	limitParam := chi.URLParam(r, "limit")
 
 	offset := 0
 	if offSetParam != "" {
@@ -138,7 +138,7 @@ func (lps *LogProxyServer) HandleGetLog(w http.ResponseWriter, r *http.Request) 
 }
 
 func (lps *LogProxyServer) HandleHeadLog(w http.ResponseWriter, r *http.Request) {
-	buildID := r.URL.Query().Get("build_id")
+	buildID := chi.URLParam(r, "build_id")
 	if buildID == "" {
 		http.Error(w, "Build ID cannot be empty string", http.StatusBadRequest)
 		return

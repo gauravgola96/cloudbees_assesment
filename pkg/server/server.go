@@ -1,7 +1,9 @@
 package server
 
 import (
+	"compress/flate"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog/log"
 	"net/http"
 	"time"
@@ -14,7 +16,9 @@ func NewHttpServer() (*http.Server, error) {
 	router := chi.NewRouter()
 
 	addr := "localhost:8080"
-	subLogger.Info().Msgf("Starting server on %s", addr)
+	DefaultMiddleware(router)
+
+	router.Mount("/", LogProxyRoutes())
 	httpServer := http.Server{
 		Addr:              addr,
 		Handler:           router,
@@ -22,8 +26,6 @@ func NewHttpServer() (*http.Server, error) {
 		ReadTimeout:       1 * time.Minute,
 		WriteTimeout:      2 * time.Minute,
 	}
-
-	router.Mount("/", LogProxyRoutes())
 
 	go func() {
 		subLogger.Info().Msgf("Listening server on %s", addr)
@@ -35,4 +37,16 @@ func NewHttpServer() (*http.Server, error) {
 	}()
 
 	return &httpServer, nil
+}
+
+func DefaultMiddleware(r *chi.Mux) http.Handler {
+	compressor := middleware.NewCompressor(flate.DefaultCompression)
+	r.Use(
+		middleware.Logger,
+		middleware.Recoverer,
+		middleware.RequestID,
+		middleware.RealIP,
+		compressor.Handler,
+	)
+	return r
 }

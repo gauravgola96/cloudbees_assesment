@@ -15,7 +15,7 @@ type JClient struct {
 func NewJenkinsClient(url string) *JClient {
 	jc := &JClient{}
 	jc.client = &http.Client{
-		Timeout: 30 * time.Second,
+		Timeout: 120 * time.Second,
 	}
 	jc.url = url
 	return jc
