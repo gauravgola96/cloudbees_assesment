@@ -41,8 +41,8 @@ func (lps *LogProxyServer) HandleGetLog(w http.ResponseWriter, r *http.Request) 
 	}
 	subLogger := log.With().Str("module", "server.handler.HandleGetLog").Str("build_id", buildID).Logger()
 
-	offSetParam := chi.URLParam(r, "offset")
-	limitParam := chi.URLParam(r, "limit")
+	offSetParam := r.URL.Query().Get("offset")
+	limitParam := r.URL.Query().Get("limit")
 
 	offset := 0
 	if offSetParam != "" {
@@ -92,45 +92,31 @@ func (lps *LogProxyServer) HandleGetLog(w http.ResponseWriter, r *http.Request) 
 	}
 
 	defer file.Close()
-	fileInfo, err := file.Stat()
+	totalLines, err := getTotalLines(filePath)
 	if err != nil {
-		subLogger.Error().Err(err).Msgf("Error getting file info for %s: %v", filePath, err)
-		http.Error(w, "Failed to get file info", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("Error in counting lines : %s", err.Error()), http.StatusBadRequest)
 		return
 	}
-	totalSize := fileInfo.Size()
-
-	//reset offset
-	if offset > int(totalSize) {
-		offset = int(totalSize)
-	}
-
-	bytesToServe := totalSize - int64(offset)
+	linesToServe := totalLines - offset
 
 	//read limit param
+	limit := -1
 	if limitParam != "" {
-		var err error
-		limit, err := strconv.Atoi(limitParam)
+		limit, err = strconv.Atoi(limitParam)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Error in offset param : %s", err.Error()), http.StatusBadRequest)
 			return
 		}
-		if int64(limit) < bytesToServe {
-			bytesToServe = int64(limit)
+		if limit < linesToServe {
+			linesToServe = limit
 		}
 	}
 
 	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Content-Length", strconv.FormatInt(bytesToServe, 10))
+	w.Header().Set("Content-Length", strconv.Itoa(linesToServe-offset))
 
-	_, err = file.Seek(int64(offset), io.SeekStart)
-	if err != nil {
-		subLogger.Error().Err(err).Msgf("Error in seeking file=%s at offset=%d", filePath, offset)
-		http.Error(w, "Error reading log", http.StatusInternalServerError)
-		return
-	}
-
-	_, err = io.CopyN(w, file, bytesToServe)
+	reader := NewLineRangeReader(file, offset, limit)
+	_, err = io.Copy(w, reader)
 	if err != nil && err != io.EOF {
 		subLogger.Error().Err(err).Msgf("Error copying file content %s", filePath)
 	}

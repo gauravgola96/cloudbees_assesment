@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"os"
 	"strconv"
-	"strings"
 )
 
 func main() {
@@ -49,8 +48,8 @@ func main() {
 	outputFile := ""
 
 	// Parse optional arguments
-	argIndex := 1
-	if len(args) > argIndex {
+	argIndex := 2
+	if len(os.Args) > argIndex {
 		parsedOffset, err := strconv.Atoi(os.Args[argIndex])
 		if err == nil {
 			offset = parsedOffset
@@ -60,8 +59,8 @@ func main() {
 		}
 	}
 
-	if len(args) > argIndex {
-		parsedLimit, err := strconv.Atoi(args[argIndex])
+	if len(os.Args) > argIndex {
+		parsedLimit, err := strconv.Atoi(os.Args[argIndex])
 		if err == nil {
 			limit = parsedLimit
 			argIndex++
@@ -70,10 +69,8 @@ func main() {
 		}
 	}
 
-	if len(args) > argIndex {
-		if !strings.HasPrefix(args[argIndex], "-") {
-			outputFile = args[argIndex]
-		}
+	if len(os.Args) > argIndex {
+		outputFile = os.Args[argIndex]
 	}
 
 	//logClient = client.NewLogProxyClient("http://localhost:8080")

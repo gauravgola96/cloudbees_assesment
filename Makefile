@@ -21,9 +21,9 @@ run-server: build
 run-client: build
 	@echo "Running Log Proxy Client..."
 	./$(CLIENT_BIN) $(ARGS)
-	## make run-client ARGS="-head 7372"
-	## make run-client ARGS="7372 500 1000"
-	## make run-client ARGS="7372 500"
+## make run-client ARGS="-head 7372"
+## make run-client ARGS="7372 500 1000"
+## make run-client ARGS="7372 500"
 
 
 test:
